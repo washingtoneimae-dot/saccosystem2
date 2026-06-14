@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en"><head><title>SACCO Admin</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="SACCO Administration Dashboard - Manage members, transactions, and statements">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════
+   DESIGN SYSTEM TOKENS
+   ═══════════════════════════════════════════════════════ */
+:root {
+  --bg: #f0f3f8;
+  --glass: linear-gradient(135deg, rgba(255,255,255,0.75) 0%, rgba(255,255,255,0.3) 100%);
+  --glass-border: rgba(255,255,255,0.7);
+  /* Thick 3D block bevels + drop shadow */
+  --glass-shadow: 
+    inset 0 0 40px rgba(255, 255, 255, 0.35),
+    inset 5px 5px 10px rgba(255, 255, 255, 0.9),
+    inset -5px -5px 12px rgba(0, 0, 0, 0.15),
+    0 20px 40px rgba(31,38,135,0.15);
+  --glass-blur: 32px;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --text-muted: #94a3b8;
+  --accent-blue: #bfdbfe;
+  --accent-blue-hover: #93c5fd;
+  --accent-green: #bbf7d0;
+  --accent-green-hover: #86efac;
+  --accent-red: #fecaca;
+  --accent-red-hover: #fca5a5;
+  --accent-amber: #fde68a;
+  --accent-amber-hover: #fcd34d;
+  --accent-purple: #ddd6fe;
+  --accent-gray: #e2e8f0;
+  --btn-blue: #dbeafe;
+  --btn-blue-text: #1e40af;
+  --btn-green: #dcfce7;
+  --btn-green-text: #166534;
+  --btn-red: #fee2e2;
+  --btn-red-text: #991b1b;
+  --btn-amber: #fef3c7;
+  --btn-amber-text: #92400e;
+  --btn-gray: #f1f5f9;
+  --btn-gray-text: #475569;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --radius-xs: 6px;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ═══════════════════════════════════════════════════════
+   BASE RESET & BODY
+   ═══════════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text-primary);
+  padding: 24px 20px 60px;
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ═══════════════════════════════════════════════════════
+   RAIN CANVAS (background layer)
+   ═══════════════════════════════════════════════════════ */
+#rain-canvas {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ═══════════════════════════════════════════════════════
+   CONTAINER
+   ═══════════════════════════════════════════════════════ */
+.container {
+  max-width: 920px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+/* ═══════════════════════════════════════════════════════
+   HEADER
+   ═══════════════════════════════════════════════════════ */
+h1 {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
+}
+
+/* ═══════════════════════════════════════════════════════
+   GLASSMORPHISM CARDS
+   ═══════════════════════════════════════════════════════ */
+.card {
+  background: var(--glass);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  /* Thick 3D Glass block edges (light hits top/left) */
+  border-top: 4px solid rgba(255, 255, 255, 0.95);
+  border-left: 4px solid rgba(255, 255, 255, 0.7);
+  border-right: 2px solid rgba(255, 255, 255, 0.15);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.08);
+  border-radius: var(--radius);
+  padding: 28px;
+  margin-bottom: 24px;
+  box-shadow: var(--glass-shadow);
+  transform-style: preserve-3d;
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+  will-change: transform;
+  /* Fluid container properties */
+  position: relative;
+  overflow: hidden;
+  --water-rotate: 0deg;
+  --water-translate-y: 0px;
+  /* Interactive scroll properties */
+  opacity: 1;
+  scale: 1;
+  transform: perspective(800px);
+  animation: none;
+}
+
+/* Water body — fills the bottom 20% */
+.card::before {
+  content: '';
+  position: absolute;
+  top: 78%;
+  bottom: auto;
+  left: -50%;
+  width: 200%;
+  height: 100%;
+  background: linear-gradient(180deg, rgba(140, 200, 255, 0.28) 0%, rgba(100, 160, 230, 0.18) 100%);
+  box-shadow: inset 0 4px 18px rgba(255, 255, 255, 0.2);
+  transform-origin: center top;
+  transform: translateY(var(--water-translate-y)) rotateZ(var(--water-rotate));
+  transition: transform 0.18s ease-out;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Wave surface — rides on top of the water body */
+.card::after {
+  content: '';
+  position: absolute;
+  top: calc(78% - 21px);
+  bottom: auto;
+  left: -60%;
+  width: 220%;
+  height: 22px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 22' preserveAspectRatio='none'%3E%3Cpath d='M0 11 C100 0, 200 22, 300 11 C400 0, 500 22, 600 11 C700 0, 800 22, 800 11 L800 22 L0 22 Z' fill='rgba(160,210,255,0.45)'/%3E%3Cpath d='M0 14 C80 4, 180 24, 280 14 C380 4, 480 24, 580 14 C680 4, 780 24, 800 14 L800 22 L0 22 Z' fill='rgba(200,230,255,0.25)'/%3E%3C/svg%3E");
+  background-size: 50% 100%;
+  transform-origin: center top;
+  transform: translateY(var(--water-translate-y)) rotateZ(var(--water-rotate));
+  transition: transform 0.18s ease-out;
+  animation: waveScroll 3s linear infinite;
+  z-index: 0;
+  pointer-events: none;
+}
+
+@keyframes waveScroll {
+  0%   { background-position: 0% 0%; }
+  100% { background-position: 100% 0%; }
+}
+
+.card > * {
+  position: relative;
+  z-index: 1;
+}
+
+
+.card h2 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--accent-blue);
+  letter-spacing: -0.2px;
+}
+
+/* ═══════════════════════════════════════════════════════
+   FORM ELEMENTS
+   ═══════════════════════════════════════════════════════ */
+label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin: 12px 0 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+select, input {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-family: var(--font);
+  background: rgba(255,255,255,0.7);
+  color: var(--text-primary);
+  transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
+  outline: none;
+}
+
+select:focus, input:focus {
+  border-color: var(--accent-blue-hover);
+  box-shadow: 0 0 0 3px rgba(147,197,253,0.25);
+  background: rgba(255,255,255,0.95);
+}
+
+.row { display: flex; gap: 14px; }
+.row > * { flex: 1; }
+
+/* ═══════════════════════════════════════════════════════
+   BUTTONS  — light pastel fills, ripple effect
+   ═══════════════════════════════════════════════════════ */
+button {
+  width: 100%;
+  padding: 11px 18px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: var(--font);
+  cursor: pointer;
+  margin-top: 14px;
+  position: relative;
+  overflow: hidden;
+  transition: transform var(--transition), box-shadow var(--transition), background var(--transition), filter var(--transition);
+  /* Default: blue */
+  background: var(--btn-blue);
+  color: var(--btn-blue-text);
+}
+
+button:hover {
+  transform: translateY(-2px) scale(1.015);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+  filter: brightness(0.95);
+}
+
+button:active {
+  transform: translateY(0) scale(0.98);
+}
+
+button.send {
+  background: var(--btn-green);
+  color: var(--btn-green-text);
+  font-size: 17px;
+  padding: 18px;
+  border-radius: var(--radius);
+}
+
+button.send:hover {
+  box-shadow: 0 8px 24px rgba(22,101,52,0.12);
+}
+
+button.edit-btn {
+  background: var(--btn-amber);
+  color: var(--btn-amber-text);
+  width: auto;
+  padding: 5px 14px;
+  font-size: 12px;
+  margin: 0;
+  border-radius: var(--radius-xs);
+}
+
+button.del-btn {
+  background: var(--btn-red);
+  color: var(--btn-red-text);
+  width: auto;
+  padding: 5px 14px;
+  font-size: 12px;
+  margin: 0;
+  border-radius: var(--radius-xs);
+}
+
+/* Ripple animation */
+.ripple-effect {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.3) 40%, transparent 70%);
+  transform: scale(0);
+  animation: rippleAnim 0.7s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes rippleAnim {
+  0% {
+    transform: scale(0);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   TABLE
+   ═══════════════════════════════════════════════════════ */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+th {
+  background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%);
+  color: var(--btn-blue-text);
+  padding: 10px 14px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+th:first-child { border-radius: var(--radius-sm) 0 0 0; }
+th:last-child { border-radius: 0 var(--radius-sm) 0 0; }
+
+td {
+  padding: 10px 14px;
+  border-bottom: 1px solid #f1f5f9;
+  transition: background var(--transition);
+}
+
+tr:hover td {
+  background: rgba(219, 234, 254, 0.2);
+}
+
+/* Clickable member names */
+td .member-name-link {
+  color: var(--btn-blue-text);
+  text-decoration: none;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color var(--transition), text-shadow var(--transition);
+  position: relative;
+}
+
+td .member-name-link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1.5px;
+  background: var(--btn-blue-text);
+  transition: width var(--transition);
+}
+
+td .member-name-link:hover {
+  color: #1d4ed8;
+  text-shadow: 0 0 8px rgba(59,130,246,0.15);
+}
+
+td .member-name-link:hover::after {
+  width: 100%;
+}
+
+/* ═══════════════════════════════════════════════════════
+   MESSAGES
+   ═══════════════════════════════════════════════════════ */
+.msg {
+  padding: 14px 18px;
+  border-radius: var(--radius-sm);
+  margin: 14px 0;
+  display: none;
+  font-size: 13px;
+  font-weight: 500;
+  backdrop-filter: blur(8px);
+  animation: msgSlide 0.4s ease;
+}
+
+.msg.ok {
+  background: rgba(220, 252, 231, 0.8);
+  color: var(--btn-green-text);
+  border: 1px solid rgba(187, 247, 208, 0.6);
+  display: block;
+}
+
+.msg.err {
+  background: rgba(254, 226, 226, 0.8);
+  color: var(--btn-red-text);
+  border: 1px solid rgba(254, 202, 202, 0.6);
+  display: block;
+}
+
+@keyframes msgSlide {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ═══════════════════════════════════════════════════════
+   MODAL
+   ═══════════════════════════════════════════════════════ */
+#editModal {
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+#editModal > .card {
+  opacity: 1;
+  transform: none;
+  animation: modalIn 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(30px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Cancel button in modal */
+button[onclick="closeEdit()"] {
+  background: var(--btn-gray);
+  color: var(--btn-gray-text);
+}
+
+/* ═══════════════════════════════════════════════════════
+   TX VIEWER
+   ═══════════════════════════════════════════════════════ */
+#tx-viewer {
+  background: rgba(241, 245, 249, 0.7) !important;
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm) !important;
+}
+
+#tx-title {
+  color: var(--text-primary) !important;
+  font-weight: 600;
+}
+
+/* ═══════════════════════════════════════════════════════
+   LINKS
+   ═══════════════════════════════════════════════════════ */
+a {
+  color: var(--btn-blue-text);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color var(--transition);
+}
+
+a:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+/* Close System button */
+button[onclick="shutdownSystem()"] {
+  background: var(--btn-red);
+  color: var(--btn-red-text);
+}
+
+/* Test Email button */
+button[onclick="testEmail()"] {
+  background: var(--accent-purple);
+  color: #5b21b6;
+}
+
+/* ═══════════════════════════════════════════════════════
+   PRE / CODE
+   ═══════════════════════════════════════════════════════ */
+pre {
+  background: rgba(241,245,249,0.8) !important;
+  padding: 14px !important;
+  border-radius: var(--radius-sm) !important;
+  font-size: 12px !important;
+  border: 1px solid var(--glass-border);
+  overflow-x: auto;
+}
+
+code {
+  background: rgba(241,245,249,0.7);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+/* ═══════════════════════════════════════════════════════
+   SCROLLBAR
+   ═══════════════════════════════════════════════════════ */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* ═══════════════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════════════ */
+@media (max-width: 640px) {
+  .row { flex-direction: column; gap: 0; }
+  .card { padding: 20px; }
+  h1 { font-size: 22px; }
+}
+
+/* ═══════════════════════════════════════════════════════
+   SUBTLE FLOAT ANIMATION FOR HEADER
+   ═══════════════════════════════════════════════════════ */
+.header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  position: relative;
+  z-index: 1;
+}
+
+.header-bar h1 {
+  background: linear-gradient(135deg, #1e293b 0%, #475569 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ═══════════════════════════════════════════════════════
+   FLOOR PUDDLE
+   ═══════════════════════════════════════════════════════ */
+#floor-puddle {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 0px;          /* driven by JS */
+  overflow: visible;
+  pointer-events: none;
+  z-index: 2;
+  transition: height 1.2s ease-out, opacity 1.2s ease-out;
+  opacity: 0;
+  /* Base water gradient */
+  background: linear-gradient(180deg,
+    rgba(140, 200, 255, 0.22) 0%,
+    rgba(100, 160, 230, 0.32) 100%);
+}
+
+/* Scrolling wave on top of the puddle */
+#floor-puddle::before {
+  content: '';
+  position: absolute;
+  top: -14px;
+  left: -60%;
+  width: 220%;
+  height: 20px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 20' preserveAspectRatio='none'%3E%3Cpath d='M0 10 C100 0, 200 20, 300 10 C400 0, 500 20, 600 10 C700 0, 800 20, 800 10 L800 20 L0 20 Z' fill='rgba(160,215,255,0.55)'/%3E%3Cpath d='M0 13 C80 3, 180 23, 280 13 C380 3, 480 23, 580 13 C680 3, 780 23, 800 13 L800 20 L0 20 Z' fill='rgba(200,235,255,0.3)'/%3E%3C/svg%3E");
+  background-size: 50% 100%;
+  animation: puddleWave 4s linear infinite;
+}
+
+/* A secondary, slower wave for depth */
+#floor-puddle::after {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: -40%;
+  width: 180%;
+  height: 14px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 14' preserveAspectRatio='none'%3E%3Cpath d='M0 7 C120 0, 240 14, 360 7 C480 0, 600 14, 720 7 C760 3, 800 10, 800 7 L800 14 L0 14 Z' fill='rgba(180,225,255,0.25)'/%3E%3C/svg%3E");
+  background-size: 50% 100%;
+  animation: puddleWave 6.5s linear infinite reverse;
+}
+
+@keyframes puddleWave {
+  0%   { background-position: 0% 0%; }
+  100% { background-position: 100% 0%; }
+}
+
+/* ═══════════════════════════════════════════════════════
+   DUCKS IN THE PUDDLE
+   ═══════════════════════════════════════════════════════ */
+.duck-family {
+  position: absolute;
+  top: -26px;
+  right: 15%;
+  left: auto;
+  font-size: 24px;
+  white-space: nowrap;
+  animation: duckBob 4s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 10;
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+}
+
+@keyframes duckBob {
+  0%   { transform: scaleX(-1) translateY(0px) rotate(0deg); }
+  25%  { transform: scaleX(-1) translateY(-4px) rotate(3deg); }
+  50%  { transform: scaleX(-1) translateY(3px) rotate(-2deg); }
+  75%  { transform: scaleX(-1) translateY(-2px) rotate(1deg); }
+  100% { transform: scaleX(-1) translateY(0px) rotate(0deg); }
+}
+</style>
+</head>
+<body>
+<!-- Rain canvas -->
+<canvas id="rain-canvas"></canvas>
+<!-- Floor puddle -->
+<div id="floor-puddle">
+  <div class="duck-family">🦆 🐤 🐤 🐤</div>
+</div>
+
+<div class="container">
+<div class="header-bar">
+<h1>SACCO Admin Panel</h1>
+<button onclick="shutdownSystem()" style="width:auto;padding:8px 18px;font-size:13px;" title="Shut down the system">✕ Close System</button>
+</div>
+<div id="msg" class="msg"></div>
+
+<div class="card">
+<h2>Add Transaction</h2>
+<form id="frm-tx" onsubmit="event.preventDefault(); submitForm(this,'add_tx')">
+<div class="row">
+<div><label>Member</label><select name="member_id" required>{member_opts}</select></div>
+<div><label>Type</label><select name="type" required>{type_opts}</select></div>
+</div>
+<div class="row">
+<div><label>Amount (KES)</label><input name="amount" type="number" step="0.01" required placeholder="5000"></div>
+<div><label>Date</label><input name="date" type="date" value="{today}" required></div>
+</div>
+<div id="evidence-upload" style="display:none;">
+<label>Evidence PDF (required for loan)</label>
+<input id="evidence-file" type="file" accept=".pdf">
+</div>
+<label>Note</label><input name="description" placeholder="Optional description">
+<button type="submit">Submit Transaction</button>
+</form></div>
+
+<div class="card">
+<h2>Add Member</h2>
+<form id="frm-member" onsubmit="event.preventDefault(); submitForm(this,'add_member')">
+<div class="row">
+<div><label>Member ID</label><input name="member_id" required placeholder="m003"></div>
+<div><label>Name</label><input name="name" required placeholder="Full name"></div>
+</div>
+<div class="row">
+<div><label>Email</label><input name="email" type="email" placeholder="email@example.com"></div>
+<div><label>Phone</label><input name="phone" placeholder="2547..."></div>
+</div>
+<div class="row">
+<div><label>Member #</label><input name="member_number" placeholder="003"></div>
+<div><label>Joined</label><input name="joined_date" type="date" value="{today}"></div>
+</div>
+<div class="row">
+<div><label>Date of Birth</label><input name="dob" type="date"></div>
+<div></div>
+</div>
+<button type="submit">Add Member</button>
+</form></div>
+
+<div class="card">
+<h2>Members</h2>
+<table><tr><th>Name</th><th>#</th><th>Email</th><th>Phone</th><th></th></tr>{member_table}</table>
+<div id="filter-bar" style="display:none;margin-top:10px;padding:10px;border-radius:8px;">
+<div class="row" style="font-size:12px;">
+<div><label>Type</label><select id="filter-type" onchange="applyFilters()"><option value="">All</option><option value="contribution">Contribution</option><option value="loan_disbursement">Loan Disbursement</option><option value="loan_repayment">Loan Repayment</option><option value="share_purchase">Share Purchase</option><option value="registration">Registration</option><option value="refund">Refund</option></select></div>
+<div><label>Amount From</label><input id="filter-amt-min" type="number" placeholder="0" onchange="applyFilters()"></div>
+<div><label>Amount To</label><input id="filter-amt-max" type="number" placeholder="999999" onchange="applyFilters()"></div>
+<div><label>Date From</label><input id="filter-date-from" type="date" onchange="applyFilters()"></div>
+<div><label>Date To</label><input id="filter-date-to" type="date" onchange="applyFilters()"></div>
+<div style="display:flex;align-items:flex-end;"><button onclick="clearFilters()" style="width:auto;padding:4px 10px;font-size:11px;background:#95a5a6;">Clear Filters</button></div>
+</div></div>
+<div id="tx-viewer" style="display:none;margin-top:16px;padding:12px;border-radius:10px;">
+<h3 id="tx-title" style="font-size:15px;margin-bottom:8px;"></h3>
+<div id="tx-content"></div>
+<button onclick="closeTxViewer()" style="width:auto;padding:5px 14px;font-size:12px;margin-top:8px;">Close</button>
+</div>
+</div>
+
+<div id="editModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,0.3);justify-content:center;align-items:center;z-index:1000;">
+<div class="card" style="max-width:450px;margin:auto;margin-top:80px;">
+<h2>Edit Member</h2>
+<input type="hidden" id="edit-id">
+<label>Name</label><input id="edit-name">
+<label>Email</label><input id="edit-email" type="email">
+<label>Phone</label><input id="edit-phone">
+<label>Member #</label><input id="edit-number">
+<label>Date of Birth</label><input id="edit-dob" type="date">
+<div class="row">
+<button onclick="saveMember()">Save Changes</button>
+<button onclick="closeEdit()">Cancel</button>
+</div>
+</div>
+</div>
+
+<div class="card" style="text-align:center">
+<h2>Send Monthly Statements</h2>
+<button onclick="sendStatements()" class="send">Send Statements Now</button>
+<div id="send-status" style="margin-top:14px;font-size:13px;color:var(--text-secondary);"></div>
+<p style="margin-top:14px;font-size:14px;"><a href="/download_all_statements">Download all statements as ZIP</a></p>
+</div>
+
+<div class="card">
+<h2 style="cursor:pointer;" onclick="toggleSettings()">Email Settings ▼</h2>
+<div id="settings-section" style="display:none;">
+<p style="font-size:12px;color:var(--text-secondary);margin-bottom:14px;">These are used when sending statements. Changes take effect immediately.</p>
+<div class="row">
+<div><label>Sender Name</label><input id="set-sender_name" value="{settings.get('sender_name','Norke SACCO')}"></div>
+<div><label>Sender Email</label><input id="set-sender_email" value="{settings.get('sender_email','')}"></div>
+</div>
+<div class="row">
+<div><label>Society Name</label><input id="set-society_name" value="{settings.get('society_name','NORKEN SACCO SOCIETY LIMITED')}"></div>
+<div><label>Account Type</label><input id="set-account_type" value="{settings.get('account_type','MEMBER PERSONAL ACCOUNT')}"></div>
+</div>
+<div class="row">
+<div><label>Interest Rate (%)</label><input id="set-interest_rate" type="number" step="0.1" min="0" max="100" value="{settings.get('interest_rate','1')}"></div>
+<div></div>
+</div>
+<label>Gmail App Password</label>
+<input id="set-gmail_app_password" type="password" placeholder="16-character app password" value="{settings.get('gmail_app_password','')}">
+<p style="font-size:11px;color:var(--text-muted);margin-top:5px;">Get this from Google Account → Security → App passwords</p>
+<button onclick="saveSettings()">Save Settings</button>
+<div style="display:flex;gap:10px;margin-top:10px;align-items:center;">
+<input id="test-email-to" placeholder="your@email.com" value="{settings.get('sender_email','')}" style="flex:1;font-size:13px;padding:8px 12px;">
+<button onclick="testEmail()" style="width:auto;padding:7px 14px;font-size:12px;">Test Email</button>
+</div>
+<div id="test-msg" style="margin-top:5px;font-size:12px;"></div>
+<div id="settings-msg" style="margin-top:10px;font-size:13px;color:var(--btn-green-text);"></div>
+</div>
+</div>
+
+<div class="card" style="margin-top:30px;">
+<h2 style="cursor:pointer;" onclick="toggleActivity()">Activity Log ▼</h2>
+<div id="activity-section" style="display:none;font-size:13px;line-height:1.7;">
+<div id="activity-content">Loading...</div>
+</div>
+</div>
+
+<div class="card" style="margin-top:30px;">
+<h2 style="cursor:pointer;" onclick="toggleHelp()">Setup Guide ▼</h2>
+<div id="help-section" style="display:none;font-size:13px;line-height:1.7;">
+<p><strong>1. Gmail Setup (for sending emails)</strong></p>
+<ol>
+<li>Create or use a Gmail account (e.g. norkesacco@gmail.com)</li>
+<li>Enable 2-Step Verification at <a href="https://myaccount.google.com/security" target="_blank">Google Security</a></li>
+<li>Generate an App Password: Google Account → Security → App passwords → Select "Mail" + "Other" → name it "SACCO"</li>
+<li>Copy the 16-character password and update Himalaya config:</li>
+</ol>
+<pre>
+# ~/.config/himalaya/config.toml
+[accounts.personal]
+email = "your-sacco-email@gmail.com"
+display-name = "Your SACCO Name"
+default = true
+
+backend.type = "imap"
+backend.host = "imap.gmail.com"
+backend.port = 993
+backend.encryption.type = "tls"
+backend.login = "your-sacco-email@gmail.com"
+backend.auth.type = "password"
+backend.auth.cmd = "echo YOUR_16_CHAR_APP_PASSWORD"
+
+message.send.backend.type = "smtp"
+message.send.backend.host = "smtp.gmail.com"
+message.send.backend.port = 587
+message.send.backend.encryption.type = "start-tls"
+message.send.backend.login = "your-sacco-email@gmail.com"
+message.send.backend.auth.type = "password"
+message.send.backend.auth.cmd = "echo YOUR_16_CHAR_APP_PASSWORD"
+</pre>
+<p><strong>2. Database</strong> — <code>./sacco.db</code> (SQLite, no credentials needed)</p>
+<p><strong>3. API Server</strong> — Runs on port 9150. Start with: <code>python3 ~/sacco/api_server.py</code></p>
+<p><strong>4. Dashboard</strong> — Open <a href="http://127.0.0.1:9150/dashboard">http://127.0.0.1:9150/dashboard</a> in your browser</p>
+<p><strong>5. Customizing Sender Details</strong> — Edit the sender name/email in <code>api_server.py</code> (search for "From: Washington Imae") or set up the Settings feature to manage them from the dashboard.</p>
+</div>
+</div>
+
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   WATER RIPPLE EFFECT ON BUTTONS
+   ═══════════════════════════════════════════════════════ */
+document.addEventListener('click', function(e) {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  const rect = btn.getBoundingClientRect();
+  const ripple = document.createElement('span');
+  ripple.className = 'ripple-effect';
+  const size = Math.max(rect.width, rect.height) * 2;
+  ripple.style.width = ripple.style.height = size + 'px';
+  ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+  ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+  btn.appendChild(ripple);
+  ripple.addEventListener('animationend', () => ripple.remove());
+});
+
+const cards = document.querySelectorAll('.card');
+
+/* ═══════════════════════════════════════════════════════
+
+</script>
+
+<script src="/dashboard.js"></script>
+</body>
+</html>
