@@ -72,7 +72,7 @@ No pip packages needed. Everything uses Python's standard library.
 - No manual `interest_charge` transaction needed
 
 ### Excel Statements
-- Matches Norken SACCO format (from Maroline's original Excel)
+- Matches Norken SACCO format (from original Excel)
 - Running totals: Total Deposit, Loan Balance, Total Interest
 - Month names (e.g. "Dec 2021") instead of Excel serial dates
 - Number format: `#,##0.00` for comma display
