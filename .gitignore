@@ -1,16 +1,11 @@
-# Byte-compiled / optimized / DLL files
 __pycache__/
-*.py[cod]
-*$py.class
-
-# SQLite database files
-*.db
-*.sqlite3
-
-# Logs
-*.log
-
-# OS generated files
-.DS_Store
-Thumbs.db
-
+*.pyc
+*.pyo
+*.egg-info/
+venv/
+.env/
+server.log
+sacco.db
+statements/
+*.xlsx
+*.zip
