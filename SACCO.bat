@@ -19,7 +19,7 @@ if %errorlevel% equ 0 (
 )
 
 REM ── Step 1: Check Python ──
-echo [1/2] Checking Python...
+echo [1/3] Checking Python...
 
 REM Try py first (Windows launcher), then python
 set PYTHON_CMD=python
@@ -47,8 +47,70 @@ if %errorlevel% equ 0 (
 )
 echo.
 
-REM ── Step 2: Start Server (with visible errors) ──
-echo [2/2] Starting SACCO...
+REM ── Step 2: Check Himalaya CLI (for email) ──
+echo [2/3] Checking Himalaya CLI...
+
+where himalaya >nul 2>&1
+if %errorlevel% equ 0 (
+    for /f "tokens=*" %%i in ('himalaya --version 2^>^&1 ^| findstr /i "himalaya"') do set "HIM_VER=%%i"
+    echo   Himalaya found [OK]
+) else (
+    echo   Himalaya not found. Attempting auto-install...
+    echo.
+    set "HIM_DIR=%APPDATA%\himalaya\bin"
+    if not exist "%HIM_DIR%" mkdir "%HIM_DIR%"
+
+    REM Download latest Himalaya Windows release from GitHub
+    echo   Downloading latest Himalaya release...
+    powershell -Command "& {
+        $url = 'https://api.github.com/repos/soywod/himalaya/releases/latest'
+        $release = Invoke-RestMethod -Uri $url -Headers @{'User-Agent'='SACCO'}
+        $asset = $release.assets | Where-Object { $_.name -like '*windows*' -or $_.name -like '*win64*' }
+        if (-not $asset) { $asset = $release.assets[0] }
+        $dl = $asset.browser_download_url
+        Write-Host \"   Downloading: $dl\"
+        $zip = \"%TEMP%\himalaya.zip\"
+        Invoke-WebRequest -Uri $dl -OutFile $zip
+        Expand-Archive -Path $zip -DestinationPath \"%HIM_DIR%\" -Force
+        Remove-Item $zip
+        Write-Host \"   Extracted to: %HIM_DIR%\"
+    }" 2>&1
+
+    if %errorlevel% equ 0 (
+        REM Add to PATH for this session and permanently
+        set "PATH=%HIM_DIR%;%PATH%"
+        powershell -Command "[Environment]::SetEnvironmentVariable('Path', [Environment]::GetEnvironmentVariable('Path', 'User') + ';%HIM_DIR%', 'User')" >nul 2>&1
+
+        where himalaya >nul 2>&1
+        if %errorlevel% equ 0 (
+            echo   Himalaya installed successfully [OK]
+        ) else (
+            echo.
+            echo   WARNING: Himalaya downloaded but not found in PATH.
+            echo   The system will work without email.
+            echo   To fix manually, add this to your PATH:
+            echo     %HIM_DIR%
+            echo.
+        )
+    ) else (
+        echo.
+        echo   WARNING: Automatic Himalaya install failed.
+        echo   The system will work, but email features will be disabled.
+        echo.
+        echo   To install manually:
+        echo   1. Download from: https://github.com/soywod/himalaya/releases
+        echo   2. Extract himalaya.exe to a folder
+        echo   3. Add that folder to your PATH
+        echo.
+        echo   Or if you have Scoop: scoop install himalaya
+        echo   Or if you have Winget: winget install himalaya
+        echo.
+    )
+)
+echo.
+
+REM ── Step 3: Start Server (with visible errors) ──
+echo [3/3] Starting SACCO...
 echo   Server log: server.log (check this if something goes wrong)
 
 REM Start server, save errors to server.log instead of hiding them

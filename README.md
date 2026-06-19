@@ -42,12 +42,14 @@ Email is sent via **Himalaya CLI** → Gmail SMTP (app password auth).
 
 ## Requirements
 
-| Dependency | Minimum | Check |
-|------------|---------|-------|
-| Python | 3.7+ | `python3 --version` |
-| Himalaya CLI | 1.0+ | `himalaya --version` (for email only) |
+| Dependency | Minimum | Check | Auto-install? |
+|------------|---------|-------|-------------|
+| Python | 3.7+ | `python3 --version` | ❌ Must install manually |
+| Himalaya CLI | 1.0+ | `himalaya --version` | ✅ Auto-installed by SACCO.bat (for email only) |
 
 No pip packages needed. Everything uses Python's standard library.
+
+Himalaya is optional. The system works without it — only email features are disabled.
 
 ---
 
