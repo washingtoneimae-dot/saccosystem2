@@ -43,6 +43,20 @@ def _ensure_schema(conn):
             updated_at TEXT
         );
     ''')
+    # Seed default settings (INSERT OR IGNORE preserves user changes)
+    now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    defaults = [
+        ('sender_name', 'Norken SACCO'),
+        ('sender_email', 'name@gmail.com'),
+        ('gmail_app_password', ''),
+        ('society_name', 'NORKEN SACCO SOCIETY LIMITED'),
+        ('account_type', 'MEMBER PERSONAL ACCOUNT'),
+        ('interest_rate', '1'),
+    ]
+    conn.executemany(
+        'INSERT OR IGNORE INTO settings (key, value, updated_at) VALUES (?, ?, ?)',
+        [(k, v, now) for k, v in defaults]
+    )
     conn.commit()
 
 class Handler(BaseHTTPRequestHandler):
