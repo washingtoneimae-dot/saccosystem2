@@ -137,5 +137,4 @@ if %errorlevel% equ 0 goto waitloop
 
 echo.
 echo   SACCO stopped.
-echo   Press any key to close.
-pause >nul
+timeout /t 3 /nobreak >nul
