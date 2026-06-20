@@ -70,6 +70,7 @@ class Handler(BaseHTTPRequestHandler):
     def _connect(self):
         conn = sqlite3.connect(DB, timeout=10)
         conn.row_factory = sqlite3.Row
+        _ensure_schema(conn)
         return conn
 
     def do_GET(self):
