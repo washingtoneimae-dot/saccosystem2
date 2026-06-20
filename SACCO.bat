@@ -120,7 +120,7 @@ REM Wait for server to start
 timeout /t 3 /nobreak >nul
 
 REM Verify server actually started
-tasklist /v /fi "STATUS eq running" 2>nul | findstr /i "python" >nul
+tasklist /v /fi "STATUS eq running" 2>nul | findstr /i "python py.exe" >nul
 if %errorlevel% neq 0 (
     echo.
     echo   ERROR: Server failed to start!
@@ -154,7 +154,7 @@ echo.
 REM ── Wait for server to stop ──
 :waitloop
 timeout /t 3 /nobreak >nul
-tasklist /v /fi "STATUS eq running" 2>nul | findstr /i "python" >nul
+tasklist /v /fi "STATUS eq running" 2>nul | findstr /i "python py.exe" >nul
 if %errorlevel% equ 0 goto waitloop
 
 echo   SACCO stopped.
