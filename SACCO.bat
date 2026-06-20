@@ -109,54 +109,57 @@ if %errorlevel% equ 0 (
 )
 echo.
 
-REM ── Step 3: Start Server (with visible errors) ──
+REM ── Step 3: Start Server ──
 echo [3/3] Starting SACCO...
 echo   Server log: server.log (check this if something goes wrong)
 
-REM Start server, save errors to server.log instead of hiding them
+REM Start server in background, save output to server.log
 start /B "" %PYTHON_CMD% api_server.py >server.log 2>&1
 
-REM Wait for server to start
-timeout /t 3 /nobreak >nul
+echo   Waiting for server to respond...
 
-REM Verify server actually started
-tasklist 2>nul | findstr /i "python py.exe" >nul
-if %errorlevel% neq 0 (
-    echo.
-    echo   ERROR: Server failed to start!
-    echo   Check server.log for details.
-    echo.
-    type server.log 2>nul
-    echo.
-    pause
-    exit /b 1
-)
+REM Wait for server to start (up to 15 seconds)
+set /a TRIES=0
+:wait_start
+timeout /t 2 /nobreak >nul
+set /a TRIES+=1
 
-REM Verify port is open
+REM Check if port is listening (most reliable check — locale-independent)
 netstat -an | findstr ":%SACCO_PORT% " >nul 2>&1
-if %errorlevel% neq 0 (
-    echo.
-    echo   WARNING: Server started but port %SACCO_PORT% is not open yet.
-    echo   Check server.log if the dashboard doesn't load.
-    echo.
-)
+if %errorlevel% equ 0 goto server_running
+
+if %TRIES% LSS 8 goto wait_start
+
+REM 16 seconds and still not running — show error
+echo.
+echo   ERROR: Server failed to start after 16 seconds!
+echo   Check server.log for details:
+echo.
+type server.log 2>nul
+echo.
+pause
+exit /b 1
+
+:server_running
+echo   Server is listening on port %SACCO_PORT% [OK]
+echo.
 
 REM ── Open Dashboard ──
 start http://127.0.0.1:%SACCO_PORT%/dashboard
-echo.
 echo   SACCO is running!
 echo   Dashboard: http://127.0.0.1:%SACCO_PORT%/dashboard
 echo.
-echo   Close the system from the dashboard or close this window.
+echo   Press Ctrl+C or close this window to stop the server.
 echo   Server log: server.log
 echo.
 
-REM ── Wait for server to stop ──
+REM ── Wait for server to stop (check port, not process name) ──
 :waitloop
 timeout /t 3 /nobreak >nul
-tasklist 2>nul | findstr /i "python py.exe" >nul
+netstat -an | findstr ":%SACCO_PORT% " >nul 2>&1
 if %errorlevel% equ 0 goto waitloop
 
+echo.
 echo   SACCO stopped.
 echo   Press any key to close.
 pause >nul
