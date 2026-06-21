@@ -151,3 +151,19 @@ Auto-created on first run. Tables:
 - HTML output escapes `<script>` etc. via `html.escape()`
 - Interest rate validated as number between 0-100
 - Only accessible on localhost (127.0.0.1)
+
+---
+
+## Ecosystem
+
+This is one project in the **Timestamped IP ecosystem** — a family of tools unified by the idea that proving *when* something happened is the foundation of IP, trust, and transparency.
+
+| Project | Purpose |
+|---------|---------|
+| [**Bit Protocol**](https://github.com/washingtoneimae-dot/bit) | Decentralized proof-of-existence on Bitcoin — stamp files/code/ideas to the blockchain |
+| [**Timestamped IP**](https://github.com/washingtoneimae-dot/timestamped-ip) | Public verifiable prior-art registry — GPG-signed, Bitcoin-anchored |
+| **SACCO System** *(this repo)* | Member statement automation — verifiable financial history for cooperatives |
+| **SolDegarde** *(private)* | Solar panel soiling tracking — timestamped sensor data → optimized cleaning cycles |
+| **5G SSB Observer** *(private)* | Tower structural health monitoring — timestamped phase logs → predictive maintenance |
+
+Every project in the ecosystem shares one pattern: **collect data → timestamp immutably → extract value from the proof.**
